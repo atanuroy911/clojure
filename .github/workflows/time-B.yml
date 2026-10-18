@@ -1,0 +1,36 @@
+name: optcd-time-B
+
+permissions:
+  contents: read
+
+on:
+- workflow_dispatch
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:                 # macOS-latest, windows-latest]
+        - ubuntu-latest
+        java-version:
+        - "17"
+        distribution:
+        - "temurin"
+        profile:
+        - "test-direct"
+    runs-on:
+    - self-hosted
+    - optcd
+    steps:
+    - uses: actions/checkout@v6
+    - name: Set up Java
+      uses: actions/setup-java@v5
+      with:
+        java-version: ${{ matrix.java-version }}
+        distribution: ${{ matrix.distribution }}
+        cache: 'maven'
+    - name: 'mvn: go-offline (untimed)'
+      run: mvn -B -q dependency:go-offline || true
+    - name: 'mvn: Build with Maven'
+      run: mvn -ntp -B -P${{ matrix.profile }} clean test -Dmaven.compiler.skip=true
